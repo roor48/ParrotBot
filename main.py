@@ -15,8 +15,9 @@ async def on_command_error(message, error):
 
 
 @bot.command()
-async def 앵무새(message, text):
-    await message.channel.send(text)
+async def 앵무새(message, *text):
+    text = ' '.join(text)
+    await message.channel.send(f"{text}")
 
 # @bot.command()
 # async def prefix(message, *, text):
