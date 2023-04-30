@@ -4,9 +4,11 @@
 
 import json
 import pandas as pd
+import requests
+import time
 import discord
 from discord.ext import commands
- 
+
 # Never Using Prefix
 cur_prefix = 'dsajfl;adsjfl;'
 
@@ -14,10 +16,16 @@ commendList = ["가입", "신고", "배워", "잊어", "따라해"]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
+url = "https://discord.com/api/users/"
+header = {"Authorization": "Bot MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"}
+
+
+
+
 commandData = pd.read_excel('C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx').values.tolist()
 commandDict = {}
 for i in commandData:
-    commandDict[i[0]] = [i[1], i[2], i[3]]
+    commandDict[i[0]] = [i[1], i[2]]
 print(commandDict)
 
 with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'r') as json_file:
@@ -93,6 +101,7 @@ async def MuseYa(message, text):
         return
     if text[:4] == "명령어":
         await message.channel.send("```무새야 ~~\n배워 {가르칠 말} {내용} ( {}안은 공백 없이 )\n잊어 {가르친 말}\n{가르친 말}```")
+        return
 
     await SayWord(message, text)
 
@@ -102,8 +111,8 @@ async def ReportWord(message, text):
     if not text in commandDict:
         await message.channel.send("어... 그 단어는 내 기억에 없는디")
         return
-    
-    users["reports"][str(commandDict[text][2])] += 1
+
+    users["reports"][str(commandDict[text][1])] += 1
     await message.channel.send("메세지 신고 완료!\n`허위 신고는 안돼`")
 
 
@@ -124,8 +133,8 @@ async def LearnWord(message, text):
         await message.channel.send(f"{text[0]}은 이미 알고 있다구!")
         return
 
-    commandDict[text[0]] = [text[1], message.author, str(message.author.id)]
-    await message.channel.send(f"{text[0]}이라고 하면 {text[1]}이라고 하면 되는거구나!")
+    commandDict[text[0]] = [text[1], str(message.author.id)]
+    await message.channel.send(f"`{text[0]}`이라고 하면 `{text[1]}`이라고 하면 되는거구나!")
 
 
 async def ForgetWord(message, text):
@@ -140,11 +149,18 @@ async def ForgetWord(message, text):
 
 async def SayWord(message, text):
     text = text.replace(" ", "")
-    
+
     if text in commendList:
         await message.channel.send(f"{text}는 다른 명령어로 지정되었기 때문에 가르칠 수 없어~")
+
     elif text in commandDict:
-        await message.channel.send(f"{commandDict[text][0]}\n`{commandDict[text][1]}님이 가르쳐 주셨어요!`")
+        r = requests.get(url + str(commandDict[text][1]), headers=header)
+        if r.status_code==429:
+            time.sleep(r.json()['retry_after'])
+            r = requests.get(url + str(commandDict[text][1]), headers=header).json()
+        r = r.json()['username']
+        await message.channel.send(f"{commandDict[text][0]}\n`{r}님이 가르쳐 주셨어요!`")
+
     else:
         await message.channel.send(f"{text}라는 단어를 모르는거 같아..")
 
@@ -153,7 +169,7 @@ def SaveDatas():
     lastDatas = []
     print("명령어 저장 중...")
     for i in commandDict.keys():
-        lastDatas.append([i, commandDict[i][0], str(commandDict[i][1]), commandDict[i][2]])
+        lastDatas.append([i, commandDict[i][0], str(commandDict[i][1])])
 
     lastDatas = pd.DataFrame.from_records(lastDatas)
     lastDatas.to_excel("C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx", index=False)
@@ -161,7 +177,7 @@ def SaveDatas():
 
     print("유저 저장 중...")
     with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'w') as json_file:
-        json.dump(users, json_file)
+        json.dump(users, json_file, ensure_ascii=False)
 
     print("유저 저장 완료")
 
