@@ -1,7 +1,6 @@
 # To Do List
 # 엑셀 파일로 저장된거 json으로 바꾸기
 
-
 import json
 import pandas as pd
 import requests
@@ -12,7 +11,7 @@ from discord.ext import commands
 # Never Using Prefix
 cur_prefix = 'dsajfl;adsjfl;'
 
-commendList = ["가입", "신고", "배워", "잊어", "따라해"]
+commendList = ["가입", "신고", "배워", "잊어", "따라해", "핑", "급식"]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
@@ -101,14 +100,14 @@ async def MuseYa(message, text):
             await message.channel.send("넌 관리자가 아니잖아!")
         return
     
-    if text[:3] ==  "신고 ":
-        await ReportWord(message, text[3:])
-        return
     if text[:3] == "배워 ":
         await LearnWord(message, text[3:])
         return
     if text[:3] == "잊어 ":
         await ForgetWord(message, text[3:])
+        return
+    if text[:3] ==  "신고 ":
+        await ReportWord(message, text[3:])
         return
     if text[:4] == "따라해 ":
         await message.channel.send(text[4:])
@@ -116,8 +115,24 @@ async def MuseYa(message, text):
     if text[:3] == "급식 ":
         await TodayMeal(message, text[3:])
         return
+    if text[:1] == "핑":
+        await message.channel.send("퐁!")
+        return
     if text[:3] == "명령어":
-        await message.channel.send("```무새야 ~~\n배워 {가르칠 말} {내용}\n잊어 {가르친 말}\n{가르친 말}\n급식 {지역} {학교이름}```")
+        await message.channel.send("무새가 아는 명령어들:\n중괄호({}) 안은 선택입니다!\n"
+                                   "\n__앵무새한테 가르치기__\n\n"
+                                   "`무새야 배워 <가르칠 말> <내용>` - 가르칠 말과 내용은 공백없이 입력 해주세요!\n"
+                                   "`무새야 잊어 <잊을 말>` - 사용자가 입력한 단어를 잊습니다!\n"
+                                   "`무새야 <가르친 말>`\n"
+                                   "`무새야 신고 <가르친 말>`\n"
+                                   "`무새야 따라해 <따라할 말>`\n"
+                                   "\n__무새가 찾아주는 급식표~__\n\n"
+                                   "`무새야 급식 <지역> <학교> {날짜}`\n"
+                                   "지역 형식 : [서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종, 경기도, 강원도, 충청북도, 충청남도, 전라북도, 전라남도, 경상북도, 경상남도, 제주도]}\n"
+                                   "학교 형식 : 이름 첫 글자 딴 줄임말 금지(예 : 배정고등학교 -> 배정고 = O, 배정미래고등학교 -> 배미고 = X, 배정미래고등학교 -> 미래고 = O\n"
+                                   "날짜 형식 : yyyymmdd (예 : 20061130)\n"
+                                   "\n__기타__\n\n"
+                                   "`무새야 핑` - 퐁!")
         return
 
     await SayWord(message, text)
@@ -130,7 +145,7 @@ async def ReportWord(message, text):
         return
 
     users["reports"][str(commandDict[text][1])] += 1
-    await message.channel.send("메세지 신고 완료!\n`허위 신고는 안돼`")
+    await message.channel.send("메세지 신고 완료!\n`허위 신고는 안돼잉`")
 
 
 async def LearnWord(message, text):
@@ -188,14 +203,14 @@ async def TodayMeal(message, text):
         text.append(time.strftime('%Y%m%d'))
     elif len(text) == 3:
         try:
+            int(text[2])
             if len(text[2]) != 8:
                 raise Exception
-            int(text[2])
         except:
             await message.channel.send("날짜 형식은 `yyyymmdd`입니다!")
             return
     else:
-        await message.channel.send("공백을 확인해주세요!\n`무새야 급식 {지역명} {학교명} {(선택)날짜}`")
+        await message.channel.send("공백을 확인해주세요!\n`무새야 급식 (지역명) (학교명) {날짜}`")
         return
 
 
@@ -208,8 +223,15 @@ async def TodayMeal(message, text):
     if "RESULT" in school_Code:
         await message.channel.send("학교 이름을 확인해 줘! (풀네임으로)")
         return
-    
+
+    if (len(school_Code["schoolInfo"][1]["row"]) > 1):
+        _schoolName = ""
+        for i in school_Code["schoolInfo"][1]["row"]:
+            _schoolName += i["SCHUL_NM"] + ", "
+        await message.channel.send(f"겹치는 학교가 있는것 같아~ `{_schoolName[:-2]}`")
+        return
     school_Code = school_Code["schoolInfo"][1]["row"][0]["SD_SCHUL_CODE"]
+
 
     mealData = requests.get(neisApi+f"mealServiceDietInfo?KEY={neisKey}&Type=json&ATPT_OFCDC_SC_CODE={text[0]}&SD_SCHUL_CODE={school_Code}&MLSV_YMD={text[2]}").json()
     if "RESULT" in mealData:
