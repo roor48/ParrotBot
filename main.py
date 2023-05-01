@@ -19,10 +19,10 @@ discordApi = "https://discord.com/api/users/"
 header = {"Authorization": "Bot MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"}
 
 SC_CodeDict = {"서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10", "광주": "F10",
-           "대전": "G10", "울산": "H10", "세종": "I10",
-           "경기도": "J10", "강원도": "K10", "충청북도": "M10", "충청남도": "N10",
-           "전라북도": "P10", "전라남도": "Q10", "경상북도": "R10", "경상남도": "S10",
-           "제주도": "T10"}
+               "대전": "G10", "울산": "H10", "세종": "I10",
+               "경기도": "J10", "강원도": "K10", "충청북도": "M10", "충청남도": "N10",
+               "전라북도": "P10", "전라남도": "Q10", "경상북도": "R10", "경상남도": "S10",
+               "제주도": "T10"}
 neisApi = 'https://open.neis.go.kr/hub/'
 neisKey = '7add51844cc841ff8226457e938b6094'
 
@@ -36,10 +36,12 @@ with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'r') as json_file:
     users = json.load(json_file)
 print(users)
 
+
 @bot.event
 async def on_ready():
     print(f'Login bot: {bot.user}')
     return
+
 
 @bot.event
 # 명령어 입력 에러
@@ -47,6 +49,7 @@ async def on_command_error(message, error):
     await message.send("명령어도 똑바로 입력 못하냐??")
     print(error)
     return
+
 
 @bot.event
 async def on_message(message):
@@ -65,15 +68,11 @@ async def on_message(message):
         await MuseYa(message, message.content[4:])
         return
 
-
-
     if str(message.author.id) in users["reports"]:
         if "잘자" in message.content:
             await message.channel.send(f"{message.author.mention}님! 잘자요~")
         elif "욕" == message.content:
             await message.channel.send(f"{message.author.mention}님! 욕은 하지말아요~♡")
-
-
 
 
 async def MuseYa(message, text):
@@ -86,11 +85,11 @@ async def MuseYa(message, text):
             users["reports"][str(message.author.id)] = 0
             await message.channel.send("가입 완료!")
         return
-    
+
     if not str(message.author.id) in users["reports"]:
         await message.channel.send("아직 가입을 안하셨네요!\n`무새야 가입`을 입력해주세요")
         return
-    
+
     if text[:4] == "다 잊어":
         if message.author.id == 468316922052608000:
             commandDict = {}
@@ -99,14 +98,14 @@ async def MuseYa(message, text):
         else:
             await message.channel.send("넌 관리자가 아니잖아!")
         return
-    
+
     if text[:3] == "배워 ":
         await LearnWord(message, text[3:])
         return
     if text[:3] == "잊어 ":
         await ForgetWord(message, text[3:])
         return
-    if text[:3] ==  "신고 ":
+    if text[:3] == "신고 ":
         await ReportWord(message, text[3:])
         return
     if text[:4] == "따라해 ":
@@ -178,7 +177,6 @@ async def ForgetWord(message, text):
         await message.channel.send(f"어라? 나는 {text}라는 말을 모르는데?")
 
 
-
 async def SayWord(message, text):
     text = text.replace(" ", "")
 
@@ -186,10 +184,12 @@ async def SayWord(message, text):
         await message.channel.send(f"{text}는 다른 명령어로 지정되었기 때문에 가르칠 수 없어~")
 
     elif text in commandDict:
-        r = requests.get(discordApi + str(commandDict[text][1]), headers=header)
-        if r.status_code==429:
+        r = requests.get(
+            discordApi + str(commandDict[text][1]), headers=header)
+        if r.status_code == 429:
             time.sleep(r.json()['retry_after'])
-            r = requests.get(discordApi + str(commandDict[text][1]), headers=header).json()
+            r = requests.get(
+                discordApi + str(commandDict[text][1]), headers=header).json()
         r = r.json()['username']
         await message.channel.send(f"{commandDict[text][0]}\n`{r}님이 가르쳐 주셨어요!`")
 
@@ -213,13 +213,13 @@ async def TodayMeal(message, text):
         await message.channel.send("공백을 확인해주세요!\n`무새야 급식 (지역명) (학교명) {날짜}`")
         return
 
-
     if not text[0] in SC_CodeDict:
         await message.channel.send("지역 이름을 확인해 줘!")
         return
 
     text[0] = SC_CodeDict[text[0]]
-    school_Code = requests.get(neisApi+f"schoolInfo?KEY={neisKey}&Type=json&SCHUL_NM={text[1]}&ATPT_OFCDC_SC_CODE={text[0]}").json()
+    school_Code = requests.get(
+        neisApi+f"schoolInfo?KEY={neisKey}&Type=json&SCHUL_NM={text[1]}&ATPT_OFCDC_SC_CODE={text[0]}").json()
     if "RESULT" in school_Code:
         await message.channel.send("학교 이름을 확인해 줘! (풀네임으로)")
         return
@@ -232,12 +232,13 @@ async def TodayMeal(message, text):
         return
     school_Code = school_Code["schoolInfo"][1]["row"][0]["SD_SCHUL_CODE"]
 
-
-    mealData = requests.get(neisApi+f"mealServiceDietInfo?KEY={neisKey}&Type=json&ATPT_OFCDC_SC_CODE={text[0]}&SD_SCHUL_CODE={school_Code}&MLSV_YMD={text[2]}").json()
+    mealData = requests.get(
+        neisApi+f"mealServiceDietInfo?KEY={neisKey}&Type=json&ATPT_OFCDC_SC_CODE={text[0]}&SD_SCHUL_CODE={school_Code}&MLSV_YMD={text[2]}").json()
     if "RESULT" in mealData:
         await message.channel.send(f"{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일은 밥 없는 날~")
         return
-    mealData = mealData["mealServiceDietInfo"][1]["row"][0]["DDISH_NM"].replace('<br/>', '')
+    mealData = mealData["mealServiceDietInfo"][1]["row"][0]["DDISH_NM"].replace(
+        '<br/>', '')
 
     todayMeal = ""
     isNotPlus = False
@@ -254,6 +255,7 @@ async def TodayMeal(message, text):
     await message.channel.send(f"`{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일 급식`\n```{todayMeal}```")
     return
 
+
 def SaveDatas():
     lastDatas = []
     print("명령어 저장 중...")
@@ -261,7 +263,8 @@ def SaveDatas():
         lastDatas.append([i, commandDict[i][0], str(commandDict[i][1])])
 
     lastDatas = pd.DataFrame.from_records(lastDatas)
-    lastDatas.to_excel("C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx", index=False)
+    lastDatas.to_excel(
+        "C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx", index=False)
     print("명령어 저장 완료")
 
     print("유저 저장 중...")
@@ -269,5 +272,6 @@ def SaveDatas():
         json.dump(users, json_file, ensure_ascii=False)
 
     print("유저 저장 완료")
+
 
 bot.run('MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM')
