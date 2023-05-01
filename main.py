@@ -16,17 +16,22 @@ commendList = ["가입", "신고", "배워", "잊어", "따라해"]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
-url = "https://discord.com/api/users/"
+discordApi = "https://discord.com/api/users/"
 header = {"Authorization": "Bot MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"}
 
-
-
+SC_CodeDict = {"서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10", "광주": "F10",
+           "대전": "G10", "울산": "H10", "세종": "I10",
+           "경기도": "J10", "강원도": "K10", "충청북도": "M10", "충청남도": "N10",
+           "전라북도": "P10", "전라남도": "Q10", "경상북도": "R10", "경상남도": "S10",
+           "제주도": "T10"}
+neisApi = 'https://open.neis.go.kr/hub/'
+neisKey = '7add51844cc841ff8226457e938b6094'
 
 commandData = pd.read_excel('C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx').values.tolist()
 commandDict = {}
 for i in commandData:
     commandDict[i[0]] = [i[1], i[2]]
-print(commandDict)
+print(commandDict, end="\n\n")
 
 with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'r') as json_file:
     users = json.load(json_file)
@@ -70,11 +75,11 @@ async def on_message(message):
             await message.channel.send(f"{message.author.mention}님! 욕은 하지말아요~♡")
 
 
-async def Register(message):
-    await message.channel.send("아직 가입을 안하셨네요!\n`무새야 가입`을 입력해주세요")
-    return
+
 
 async def MuseYa(message, text):
+    global commandDict
+    global users
     if "가입" == text:
         if str(message.author.id) in users["reports"]:
             await message.channel.send("이미 가입 되어있어요!")
@@ -84,7 +89,16 @@ async def MuseYa(message, text):
         return
     
     if not str(message.author.id) in users["reports"]:
-        await Register(message)
+        await message.channel.send("아직 가입을 안하셨네요!\n`무새야 가입`을 입력해주세요")
+        return
+    
+    if text[:4] == "다 잊어":
+        if message.author.id == 468316922052608000:
+            commandDict = {}
+            users = {"reports": {}}
+            await message.channel.send("헤헤.. 다 까먹어버렸당")
+        else:
+            await message.channel.send("넌 관리자가 아니잖아!")
         return
     
     if text[:3] ==  "신고 ":
@@ -99,8 +113,11 @@ async def MuseYa(message, text):
     if text[:4] == "따라해 ":
         await message.channel.send(text[4:])
         return
-    if text[:4] == "명령어":
-        await message.channel.send("```무새야 ~~\n배워 {가르칠 말} {내용} ( {}안은 공백 없이 )\n잊어 {가르친 말}\n{가르친 말}```")
+    if text[:3] == "급식 ":
+        await TodayMeal(message, text[3:])
+        return
+    if text[:3] == "명령어":
+        await message.channel.send("```무새야 ~~\n배워 {가르칠 말} {내용}\n잊어 {가르친 말}\n{가르친 말}\n급식 {지역} {학교이름}```")
         return
 
     await SayWord(message, text)
@@ -154,16 +171,66 @@ async def SayWord(message, text):
         await message.channel.send(f"{text}는 다른 명령어로 지정되었기 때문에 가르칠 수 없어~")
 
     elif text in commandDict:
-        r = requests.get(url + str(commandDict[text][1]), headers=header)
+        r = requests.get(discordApi + str(commandDict[text][1]), headers=header)
         if r.status_code==429:
             time.sleep(r.json()['retry_after'])
-            r = requests.get(url + str(commandDict[text][1]), headers=header).json()
+            r = requests.get(discordApi + str(commandDict[text][1]), headers=header).json()
         r = r.json()['username']
         await message.channel.send(f"{commandDict[text][0]}\n`{r}님이 가르쳐 주셨어요!`")
 
     else:
         await message.channel.send(f"{text}라는 단어를 모르는거 같아..")
 
+
+async def TodayMeal(message, text):
+    text = text.split()
+    if len(text) == 2:
+        text.append(time.strftime('%Y%m%d'))
+    elif len(text) == 3:
+        try:
+            if len(text[2]) != 8:
+                raise Exception
+            int(text[2])
+        except:
+            await message.channel.send("날짜 형식은 `yyyymmdd`입니다!")
+            return
+    else:
+        await message.channel.send("공백을 확인해주세요!\n`무새야 급식 {지역명} {학교명} {(선택)날짜}`")
+        return
+
+
+    if not text[0] in SC_CodeDict:
+        await message.channel.send("지역 이름을 확인해 줘!")
+        return
+
+    text[0] = SC_CodeDict[text[0]]
+    school_Code = requests.get(neisApi+f"schoolInfo?KEY={neisKey}&Type=json&SCHUL_NM={text[1]}&ATPT_OFCDC_SC_CODE={text[0]}").json()
+    if "RESULT" in school_Code:
+        await message.channel.send("학교 이름을 확인해 줘! (풀네임으로)")
+        return
+    
+    school_Code = school_Code["schoolInfo"][1]["row"][0]["SD_SCHUL_CODE"]
+
+    mealData = requests.get(neisApi+f"mealServiceDietInfo?KEY={neisKey}&Type=json&ATPT_OFCDC_SC_CODE={text[0]}&SD_SCHUL_CODE={school_Code}&MLSV_YMD={text[2]}").json()
+    if "RESULT" in mealData:
+        await message.channel.send(f"{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일은 밥 없는 날~")
+        return
+    mealData = mealData["mealServiceDietInfo"][1]["row"][0]["DDISH_NM"].replace('<br/>', '')
+
+    todayMeal = ""
+    isNotPlus = False
+    for i in mealData:
+        if i == "(":
+            isNotPlus = True
+        elif i == ")":
+            isNotPlus = False
+            continue
+        if isNotPlus:
+            continue
+        todayMeal += i
+    todayMeal = " ".join(todayMeal.split()).replace(' ', '\n')
+    await message.channel.send(f"`{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일 급식`\n```{todayMeal}```")
+    return
 
 def SaveDatas():
     lastDatas = []
