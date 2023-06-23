@@ -12,6 +12,7 @@ from discord.ext import commands
 cur_prefix = 'dsajfl;adsjfl;'
 
 commendList = ["가입", "신고", "배워", "잊어", "따라해", "핑", "급식"]
+adminIdList = [468316922052608000]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
@@ -30,11 +31,11 @@ commandData = pd.read_excel('C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xls
 commandDict = {}
 for i in commandData:
     commandDict[i[0]] = [i[1], i[2]]
-print(commandDict, end="\n\n")
+print(commandDict)
 
 with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'r') as json_file:
     users = json.load(json_file)
-print(users)
+print(users, end="\n\n")
 
 
 @bot.event
@@ -57,10 +58,10 @@ async def on_message(message):
         return
 
     if "무새야 데이터 저장" == message.content:
-        if message.author.id == 468316922052608000:
+        if message.author.id in adminIdList:
             SaveDatas()
             await message.channel.send("데이터를 저장했어요!")
-        elif message.author.id != 468316922052608000:
+        else:
             await message.channel.send("넌 관리자가 아니잖아!")
         return
 
@@ -91,7 +92,7 @@ async def MuseYa(message, text):
         return
 
     if text[:4] == "다 잊어":
-        if message.author.id == 468316922052608000:
+        if message.author.id in adminIdList:
             commandDict = {}
             users = {"reports": {}}
             await message.channel.send("헤헤.. 다 까먹어버렸당")
@@ -153,6 +154,10 @@ async def LearnWord(message, text):
         return
 
     text = text.split(' ')
+    if (text[0] in commendList):
+        await message.channel.send(f"{text[0]}는 다른 명령어로 지정되었기 때문에 가르칠 수 없어~")
+        return
+    
     if len(text[0]) > 10:
         await message.channel.send("그렇게 큰 건 내 뇌에 다 안 들어온다고옷~♡\n`가르칠 말을 10글자 이내로 작성해주세요`")
         return
@@ -180,10 +185,11 @@ async def ForgetWord(message, text):
 async def SayWord(message, text):
     text = text.replace(" ", "")
 
-    if text in commendList:
-        await message.channel.send(f"{text}는 다른 명령어로 지정되었기 때문에 가르칠 수 없어~")
+    if (text in commendList):
+        await message.channel.send(f"명령어 형식을 확인해주세용~♥")
+        return
 
-    elif text in commandDict:
+    if text in commandDict:
         r = requests.get(
             discordApi + str(commandDict[text][1]), headers=header)
         if r.status_code == 429:
@@ -192,9 +198,9 @@ async def SayWord(message, text):
                 discordApi + str(commandDict[text][1]), headers=header).json()
         r = r.json()['username']
         await message.channel.send(f"{commandDict[text][0]}\n`{r}님이 가르쳐 주셨어요!`")
+        return
 
-    else:
-        await message.channel.send(f"{text}라는 단어를 모르는거 같아..")
+    await message.channel.send(f"{text}라는 단어를 모르는거 같아..")
 
 
 async def TodayMeal(message, text):
