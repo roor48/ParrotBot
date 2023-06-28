@@ -246,7 +246,6 @@ async def TodayMeal(message, text):
     hasLunch = False
 
     mealData = mealData["mealServiceDietInfo"][1]["row"]
-    print(mealData)
     for i in range(1, len(mealData)):
         if mealData[i]["MMEAL_SC_NM"] == "중식":
             hasLunch = True
