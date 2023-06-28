@@ -27,13 +27,13 @@ SC_CodeDict = {"서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10
 neisApi = 'https://open.neis.go.kr/hub/'
 neisKey = '7add51844cc841ff8226457e938b6094'
 
-commandData = pd.read_excel('C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx').values.tolist()
+commandData = pd.read_excel('C:/GitHub/Python/DiscordBot/RepeatBot/MyBotData.xlsx').values.tolist()
 commandDict = {}
 for i in commandData:
     commandDict[i[0]] = [i[1], i[2]]
 print(commandDict)
 
-with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'r') as json_file:
+with open("C:/GitHub/Python/DiscordBot/RepeatBot/Users.json", 'r') as json_file:
     users = json.load(json_file)
 print(users, end="\n\n")
 
@@ -224,11 +224,11 @@ async def TodayMeal(message, text):
         return
 
     text[0] = SC_CodeDict[text[0]]
-    school_Code = requests.get(
-        neisApi+f"schoolInfo?KEY={neisKey}&Type=json&SCHUL_NM={text[1]}&ATPT_OFCDC_SC_CODE={text[0]}").json()
+    school_Code = requests.get(neisApi+f"schoolInfo?KEY={neisKey}&Type=json&SCHUL_NM={text[1]}&ATPT_OFCDC_SC_CODE={text[0]}").json()
     if "RESULT" in school_Code:
         await message.channel.send("학교 이름을 확인해 줘! (풀네임으로)")
         return
+
 
     if (len(school_Code["schoolInfo"][1]["row"]) > 1):
         _schoolName = ""
@@ -238,13 +238,25 @@ async def TodayMeal(message, text):
         return
     school_Code = school_Code["schoolInfo"][1]["row"][0]["SD_SCHUL_CODE"]
 
-    mealData = requests.get(
-        neisApi+f"mealServiceDietInfo?KEY={neisKey}&Type=json&ATPT_OFCDC_SC_CODE={text[0]}&SD_SCHUL_CODE={school_Code}&MLSV_YMD={text[2]}").json()
+    mealData = requests.get(neisApi+f"mealServiceDietInfo?KEY={neisKey}&Type=json&ATPT_OFCDC_SC_CODE={text[0]}&SD_SCHUL_CODE={school_Code}&MLSV_YMD={text[2]}").json()
     if "RESULT" in mealData:
         await message.channel.send(f"{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일은 밥 없는 날~")
         return
-    mealData = mealData["mealServiceDietInfo"][1]["row"][0]["DDISH_NM"].replace(
-        '<br/>', '')
+
+    hasLunch = False
+
+    mealData = mealData["mealServiceDietInfo"][1]["row"]
+    print(mealData)
+    for i in range(1, len(mealData)):
+        if mealData[i]["MMEAL_SC_NM"] == "중식":
+            hasLunch = True
+            mealData = mealData[i]["DDISH_NM"].replace('<br/>', '')
+        break
+    if not hasLunch:
+        await message.channel.send(f"{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일은 중식이 없는데?")
+        return
+
+    # mealData = mealData["mealServiceDietInfo"][1]["row"][0]["DDISH_NM"].replace('<br/>', '')
 
     todayMeal = ""
     isNotPlus = False
@@ -270,11 +282,11 @@ def SaveDatas():
 
     lastDatas = pd.DataFrame.from_records(lastDatas)
     lastDatas.to_excel(
-        "C:/GitHub/Python/DiscordBot_RepeatBot/MyBotData.xlsx", index=False)
+        "C:/GitHub/Python/DiscordBot/RepeatBot/MyBotData.xlsx", index=False)
     print("명령어 저장 완료")
 
     print("유저 저장 중...")
-    with open("C:/GitHub/Python/DiscordBot_RepeatBot/Users.json", 'w') as json_file:
+    with open("C:/GitHub/Python/DiscordBot/RepeatBot/Users.json", 'w') as json_file:
         json.dump(users, json_file, ensure_ascii=False)
 
     print("유저 저장 완료")
