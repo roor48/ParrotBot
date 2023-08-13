@@ -31,11 +31,14 @@ commandData = pd.read_excel('C:/GitHub/Python/DiscordBot/RepeatBot/MyBotData.xls
 commandDict = {}
 for i in commandData:
     commandDict[i[0]] = [i[1], i[2]]
-print(commandDict)
+    print(commandDict)
 
 with open("C:/GitHub/Python/DiscordBot/RepeatBot/Users.json", 'r') as json_file:
     users = json.load(json_file)
-print(users, end="\n\n")
+    if not "reports" in users:
+        users["reports"] = {}
+    print(users, end="\n\n")
+    
 
 
 @bot.event
