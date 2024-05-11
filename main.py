@@ -12,7 +12,7 @@ from discord.ext import commands
 cur_prefix = 'dsajfl;adsjfl;'
 
 commendList = ["가입", "신고", "배워", "잊어", "따라해", "핑", "급식"]
-adminIdList = [468316922052608000]
+adminIdList = [468316922052608000, 451664773939986434]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
@@ -27,13 +27,13 @@ SC_CodeDict = {"서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10
 neisApi = 'https://open.neis.go.kr/hub/'
 neisKey = '7add51844cc841ff8226457e938b6094'
 
-commandData = pd.read_excel('C:/GitHub/Python/DiscordBot/RepeatBot/MyBotData.xlsx').values.tolist()
+commandData = pd.read_excel('./MyBotData.xlsx').values.tolist()
 commandDict = {}
 for i in commandData:
     commandDict[i[0]] = [i[1], i[2]]
-    print(commandDict)
+print(commandDict)
 
-with open("C:/GitHub/Python/DiscordBot/RepeatBot/Users.json", 'r') as json_file:
+with open("./Users.json", 'r') as json_file:
     users = json.load(json_file)
     if not "reports" in users:
         users["reports"] = {}
@@ -57,7 +57,7 @@ async def on_command_error(message, error):
 
 @bot.event
 async def on_message(message):
-    if message.author.id == bot.user.id:
+    if message.author.bot:
         return
 
     if "무새야 데이터 저장" == message.content:
@@ -84,12 +84,31 @@ async def on_message(message):
 async def MuseYa(message, text):
     global commandDict
     global users
+
+    print(message.author.global_name, text)
     if "가입" == text:
         if str(message.author.id) in users["reports"]:
             await message.channel.send("이미 가입 되어있어요!")
         else:
             users["reports"][str(message.author.id)] = 0
             await message.channel.send("가입 완료!")
+        return
+    
+    if text[:3] == "명령어":
+        await message.channel.send("무새가 아는 명령어들:\n중괄호({}) 안은 선택입니다!\n"
+                                   "\n__앵무새한테 가르치기__\n\n"
+                                   "`무새야 배워 <가르칠 말> <내용>` - 가르칠 말과 내용은 공백없이 입력 해주세요!\n"
+                                   "`무새야 잊어 <잊을 말>` - 사용자가 입력한 단어를 잊습니다!\n"
+                                   "`무새야 <가르친 말>`\n"
+                                   "`무새야 신고 <가르친 말>`\n"
+                                   "`무새야 따라해 <따라할 말>`\n"
+                                   "\n__무새가 찾아주는 급식표~__\n\n"
+                                   "`무새야 <급식|조식|중식|석식> <지역> <학교> {날짜}`\n"
+                                   "지역 형식 : [서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종, 경기도, 강원도, 충청북도, 충청남도, 전라북도, 전라남도, 경상북도, 경상남도, 제주도]}\n"
+                                   "학교 형식 : 이름 첫 글자 딴 줄임말 금지(예 : 배정고등학교 -> 배정고 = O, 배정미래고등학교 -> 배미고 = X, 배정미래고등학교 -> 미래고 = O\n"
+                                   "날짜 형식 : yyyymmdd (예 : 20061130)\n"
+                                   "\n__기타__\n\n"
+                                   "`무새야 핑` - 퐁!")
         return
 
     if not str(message.author.id) in users["reports"]:
@@ -117,27 +136,15 @@ async def MuseYa(message, text):
     if text[:4] == "따라해 ":
         await message.channel.send(text[4:])
         return
-    if text[:3] == "급식 ":
-        await TodayMeal(message, text[3:])
+    if text[:3] in ["급식 ", "조식 ", "중식 ", "석식 "]:
+        if text[0] == '급':
+            text = list(text)
+            text[0] = '중'
+            text = ''.join(text)
+        await TodayMeal(message, text[3:], text[:2])
         return
     if text[:1] == "핑":
         await message.channel.send("퐁!")
-        return
-    if text[:3] == "명령어":
-        await message.channel.send("무새가 아는 명령어들:\n중괄호({}) 안은 선택입니다!\n"
-                                   "\n__앵무새한테 가르치기__\n\n"
-                                   "`무새야 배워 <가르칠 말> <내용>` - 가르칠 말과 내용은 공백없이 입력 해주세요!\n"
-                                   "`무새야 잊어 <잊을 말>` - 사용자가 입력한 단어를 잊습니다!\n"
-                                   "`무새야 <가르친 말>`\n"
-                                   "`무새야 신고 <가르친 말>`\n"
-                                   "`무새야 따라해 <따라할 말>`\n"
-                                   "\n__무새가 찾아주는 급식표~__\n\n"
-                                   "`무새야 급식 <지역> <학교> {날짜}`\n"
-                                   "지역 형식 : [서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종, 경기도, 강원도, 충청북도, 충청남도, 전라북도, 전라남도, 경상북도, 경상남도, 제주도]}\n"
-                                   "학교 형식 : 이름 첫 글자 딴 줄임말 금지(예 : 배정고등학교 -> 배정고 = O, 배정미래고등학교 -> 배미고 = X, 배정미래고등학교 -> 미래고 = O\n"
-                                   "날짜 형식 : yyyymmdd (예 : 20061130)\n"
-                                   "\n__기타__\n\n"
-                                   "`무새야 핑` - 퐁!")
         return
 
     await SayWord(message, text)
@@ -179,6 +186,8 @@ async def LearnWord(message, text):
 
 
 async def ForgetWord(message, text):
+    if not message.author.id in adminIdList:
+        return
     text = text.replace(" ", "")
     if text in commandDict:
         del commandDict[text]
@@ -205,10 +214,10 @@ async def SayWord(message, text):
         await message.channel.send(f"{commandDict[text][0]}\n`{r}님이 가르쳐 주셨어요!`")
         return
 
-    await message.channel.send(f"{text}라는 단어를 모르는거 같아..")
+    await message.channel.send(f"{text}(이)라는 단어를 모르는거 같아..")
 
 
-async def TodayMeal(message, text):
+async def TodayMeal(message, text, foodType):
     text = text.split()
     if len(text) == 2:
         text.append(time.strftime('%Y%m%d'))
@@ -251,13 +260,13 @@ async def TodayMeal(message, text):
     hasLunch = False
 
     mealData = mealData["mealServiceDietInfo"][1]["row"]
-    for i in range(1, len(mealData)):
-        if mealData[i]["MMEAL_SC_NM"] == "중식":
+    for i in range(len(mealData)):
+        if mealData[i]["MMEAL_SC_NM"] == foodType:
             hasLunch = True
             mealData = mealData[i]["DDISH_NM"].replace('<br/>', '')
-        break
+            break
     if not hasLunch:
-        await message.channel.send(f"{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일은 중식이 없는데?")
+        await message.channel.send(f"{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일은 {foodType}이 없는데?")
         return
 
     # mealData = mealData["mealServiceDietInfo"][1]["row"][0]["DDISH_NM"].replace('<br/>', '')
@@ -274,7 +283,7 @@ async def TodayMeal(message, text):
             continue
         todayMeal += i
     todayMeal = " ".join(todayMeal.split()).replace(' ', '\n')
-    await message.channel.send(f"`{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일 급식`\n```{todayMeal}```")
+    await message.channel.send(f"`{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일 {foodType}`\n```{todayMeal}```")
     return
 
 
@@ -286,11 +295,11 @@ def SaveDatas():
 
     lastDatas = pd.DataFrame.from_records(lastDatas)
     lastDatas.to_excel(
-        "C:/GitHub/Python/DiscordBot/RepeatBot/MyBotData.xlsx", index=False)
+        "./MyBotData.xlsx", index=False)
     print("명령어 저장 완료")
 
     print("유저 저장 중...")
-    with open("C:/GitHub/Python/DiscordBot/RepeatBot/Users.json", 'w') as json_file:
+    with open("./Users.json", 'w') as json_file:
         json.dump(users, json_file, ensure_ascii=False)
 
     print("유저 저장 완료")
