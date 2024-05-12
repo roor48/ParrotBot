@@ -17,7 +17,8 @@ adminIdList = [468316922052608000, 451664773939986434]
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
 discordApi = "https://discord.com/api/users/"
-header = {"Authorization": "Bot MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"}
+BOT_KEY = "MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"
+header = {"Authorization": "Bot " + BOT_KEY}
 
 SC_CodeDict = {"서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10", "광주": "F10",
                "대전": "G10", "울산": "H10", "세종": "I10",
@@ -27,18 +28,15 @@ SC_CodeDict = {"서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10
 neisApi = 'https://open.neis.go.kr/hub/'
 neisKey = '7add51844cc841ff8226457e938b6094'
 
-commandData = pd.read_excel('./MyBotData.xlsx').values.tolist()
+commandData = pd.read_csv('./MyBotData.csv').values.tolist()
 commandDict = {}
 for i in commandData:
     commandDict[i[0]] = [i[1], i[2]]
-print(commandDict)
 
 with open("./Users.json", 'r') as json_file:
     users = json.load(json_file)
     if not "reports" in users:
         users["reports"] = {}
-    print(users, end="\n\n")
-    
 
 
 @bot.event
@@ -305,4 +303,4 @@ def SaveDatas():
     print("유저 저장 완료")
 
 
-bot.run('MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM')
+bot.run(BOT_KEY)
