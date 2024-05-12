@@ -289,18 +289,20 @@ async def TodayMeal(message, text, foodType):
     return
 
 async def ProfilePicture(message, text):
-    if (text[:2] != '<@' or text[-1] != '>') and not str.isdigit(text):
-        await message.channel.send("사용자를 멘션해주세요!")
-        return
+    if text[:2] == '<@' and text[-1] == '>':
+        text = text[2:-1]
     
     if not str.isdigit(text):
-        text = text[2:-1]
+        await message.channel.send("사용자를 멘션해주세요!")
+        return
+
     
     r = requests.get(
         discordApi + text, headers=header)
     if r.status_code == 404:
         await message.channel.send("알 수 없는 사용자입니다.")
         return
+    print(r.json())
     while r.status_code == 429:
         time.sleep(r.json()['retry_after'])
         r = requests.get(
