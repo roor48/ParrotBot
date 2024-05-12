@@ -11,7 +11,7 @@ from discord.ext import commands
 # Never Using Prefix
 cur_prefix = 'dsajfl;adsjfl;'
 
-commendList = ["가입", "신고", "배워", "잊어", "따라해", "핑", "급식"]
+commendList = ["가입", "신고", "배워", "잊어", "따라해", "핑", "급식", "조식", "중식", "석식", "프사"]
 adminIdList = [468316922052608000, 451664773939986434]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
@@ -106,7 +106,8 @@ async def MuseYa(message, text):
                                    "학교 형식 : 이름 첫 글자 딴 줄임말 금지(예 : 배정고등학교 -> 배정고 = O, 배정미래고등학교 -> 배미고 = X, 배정미래고등학교 -> 미래고 = O\n"
                                    "날짜 형식 : yyyymmdd (예 : 20061130)\n"
                                    "\n__기타__\n\n"
-                                   "`무새야 핑` - 퐁!")
+                                   "`무새야 핑` - 퐁!\n"
+                                   "`무새야 프사 <맨션|사용자 id>` - 사용자의 프로필 사진을 불러옵니다.")
         return
 
     if not str(message.author.id) in users["reports"]:
@@ -143,6 +144,9 @@ async def MuseYa(message, text):
         return
     if text[:1] == "핑":
         await message.channel.send("퐁!")
+        return
+    if text[:3] == "프사 ":
+        await ProfilePicture(message, text[3:])
         return
 
     await SayWord(message, text)
@@ -197,18 +201,18 @@ async def ForgetWord(message, text):
 async def SayWord(message, text):
     text = text.replace(" ", "")
 
-    if (text in commendList):
+    if text in commendList:
         await message.channel.send(f"명령어 형식을 확인해주세용~♥")
         return
 
     if text in commandDict:
         r = requests.get(
             discordApi + str(commandDict[text][1]), headers=header)
-        if r.status_code == 429:
+        while r.status_code == 429:
             time.sleep(r.json()['retry_after'])
             r = requests.get(
-                discordApi + str(commandDict[text][1]), headers=header).json()
-        r = r.json()['username']
+                discordApi + str(commandDict[text][1]), headers=header)
+        r = r.json()['global_name']
         await message.channel.send(f"{commandDict[text][0]}\n`{r}님이 가르쳐 주셨어요!`")
         return
 
@@ -284,6 +288,25 @@ async def TodayMeal(message, text, foodType):
     await message.channel.send(f"`{text[2][:4]}-{text[2][4:6]}-{text[2][6:8]}일 {foodType}`\n```{todayMeal}```")
     return
 
+async def ProfilePicture(message, text):
+    if (text[:2] != '<@' or text[-1] != '>') and not str.isdigit(text):
+        await message.channel.send("사용자를 멘션해주세요!")
+        return
+    
+    if not str.isdigit(text):
+        text = text[2:-1]
+    
+    r = requests.get(
+        discordApi + text, headers=header)
+    if r.status_code == 404:
+        await message.channel.send("알 수 없는 사용자입니다.")
+        return
+    while r.status_code == 429:
+        time.sleep(r.json()['retry_after'])
+        r = requests.get(
+            discordApi + text, headers=header)
+    r = r.json()['avatar']
+    await message.channel.send(f'https://cdn.discordapp.com/avatars/{text}/{r}.png?size=4096')
 
 def SaveDatas():
     lastDatas = []
@@ -292,8 +315,8 @@ def SaveDatas():
         lastDatas.append([i, commandDict[i][0], str(commandDict[i][1])])
 
     lastDatas = pd.DataFrame.from_records(lastDatas)
-    lastDatas.to_excel(
-        "./MyBotData.xlsx", index=False)
+    lastDatas.to_csv(
+        "./MyBotData.csv", index=False)
     print("명령어 저장 완료")
 
     print("유저 저장 중...")
