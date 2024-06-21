@@ -4,8 +4,11 @@
 import json
 import pandas as pd
 import requests
+import sched
 import time
 import discord
+import threading
+from datetime import datetime, timedelta
 from discord.ext import commands
 
 # Never Using Prefix
@@ -17,6 +20,7 @@ commendList = [
 adminIdList = [468316922052608000, 451664773939986434]
 
 bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
+
 
 discordApi = "https://discord.com/api/users/"
 BOT_KEY = "MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"
@@ -58,6 +62,7 @@ with open("./Users.json", 'r') as json_file:
 @bot.event
 async def on_ready():
   print(f'Login bot: {bot.user}')
+  
   return
 
 
@@ -89,8 +94,6 @@ async def on_message(message):
   if str(message.author.id) in users["reports"]:
     if "잘자" in message.content:
       await message.channel.send(f"{message.author.mention}님! 잘자요~")
-    elif "욕" == message.content:
-      await message.channel.send(f"{message.author.mention}님! 욕은 하지말아요~♡")
     elif "안녕" in message.content:
       await message.channel.send("안녕")
 
@@ -355,5 +358,22 @@ def SaveDatas():
     json.dump(users, json_file, ensure_ascii=False)
 
   print("유저 저장 완료")
+
+# 매 정시에 실행되게 하는 함수
+def schedule_save_user_data():
+  while True:
+    now = datetime.now()
+    # 다음 정시 계산
+    next_hour = (now.replace(second=0, microsecond=0, minute=0) + timedelta(hours=1))
+    # 다음 정시까지 남은 시간 계산
+    wait_time = (next_hour - now).total_seconds()
+    # 다음 정시까지 대기
+    time.sleep(wait_time)
+    # 유저 데이터 저장
+    SaveDatas()
+
+data_saving_thread = threading.Thread(target=schedule_save_user_data)
+data_saving_thread.daemon = True
+data_saving_thread.start()
 
 bot.run(BOT_KEY)
