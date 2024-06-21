@@ -324,10 +324,10 @@ async def ProfilePicture(message, text):
     text = text[2:-1]
 
   r = requests.get(discordApi + text, headers=header)
-  print(r.status_code)
-  print(r.json())
+  # print(r.status_code)
+  # print(r.json())
   while r.status_code == 429:
-    print(type(r.json()['retry_after']))
+    # print(type(r.json()['retry_after']))
     time.sleep(r.json()['retry_after'])
     r = requests.get(discordApi + text, headers=header)
 
