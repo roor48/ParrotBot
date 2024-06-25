@@ -4,12 +4,14 @@
 import json
 import pandas as pd
 import requests
-import sched
 import time
 import discord
 import threading
 from datetime import datetime, timedelta
 from discord.ext import commands
+from pytz import timezone
+
+datetime.now(timezone('Asia/Seoul'))
 
 # Never Using Prefix
 cur_prefix = 'dsajfl;adsjfl;'
@@ -242,10 +244,11 @@ async def SayWord(message, text):
 async def TodayMeal(message, text, foodType):
   text = text.split()
   if len(text) == 2:
-    text.append(time.strftime('%Y%m%d'))
+    # text.append(time.strftime('%Y%m%d'))
+    text.append(datetime.now().strftime('%Y%m%d'))
   elif len(text) == 3:
     try:
-      int(text[2])
+      int(text[2]) # 숫자가 아닌 다른 문자가 있으면 에러
       if len(text[2]) != 8:
         raise Exception
     except:
