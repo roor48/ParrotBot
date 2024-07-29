@@ -2,3 +2,4 @@
 *.ppk
 *.pem
 test.py
+/llama3/
