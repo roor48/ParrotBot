@@ -1,6 +1,7 @@
 # To Do List
 # 엑셀 파일로 저장된거 json으로 바꾸기
 
+import os
 import json
 import pandas as pd
 import requests
@@ -10,8 +11,11 @@ import threading
 from datetime import datetime, timedelta
 from discord.ext import commands
 from pytz import timezone
+from dotenv import load_dotenv
+
 
 datetime.now(timezone('Asia/Seoul'))
+load_dotenv()
 
 # Never Using Prefix
 cur_prefix = 'dsajfl;adsjfl;'
@@ -25,7 +29,7 @@ bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
 
 discordApi = "https://discord.com/api/users/"
-BOT_KEY = "MTA1NjQ0NDA0MDgwMDg5NDk5Ng.GW_KpF.wZu6i4iqXLjXnZ4N7GaYQBneqEzyF97q_TMiLM"
+BOT_KEY = os.environ("BOT_KEY")
 header = {"Authorization": "Bot " + BOT_KEY}
 
 SC_CodeDict = {
@@ -48,7 +52,7 @@ SC_CodeDict = {
     "제주도": "T10"
 }
 neisApi = 'https://open.neis.go.kr/hub/'
-neisKey = "7add51844cc841ff8226457e938b6094"
+neisKey = os.environ("NEIS_KEY")
 
 commandData = pd.read_csv('./MyBotData.csv').values.tolist()
 commandDict = {}
