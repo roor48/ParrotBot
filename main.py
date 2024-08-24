@@ -29,7 +29,7 @@ bot = commands.Bot(command_prefix=cur_prefix, intents=discord.Intents.all())
 
 
 discordApi = "https://discord.com/api/users/"
-BOT_KEY = os.environ("BOT_KEY")
+BOT_KEY = os.getenv("BOT_KEY")
 header = {"Authorization": "Bot " + BOT_KEY}
 
 SC_CodeDict = {
@@ -52,7 +52,7 @@ SC_CodeDict = {
     "제주도": "T10"
 }
 neisApi = 'https://open.neis.go.kr/hub/'
-neisKey = os.environ("NEIS_KEY")
+neisKey = os.getenv("NEIS_KEY")
 
 commandData = pd.read_csv('./MyBotData.csv').values.tolist()
 commandDict = {}
