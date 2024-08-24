@@ -1,5 +1,5 @@
+.env
 *.xlsx
 *.ppk
 *.pem
 test.py
-/llama3/
