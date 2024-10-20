@@ -98,10 +98,8 @@ async def on_message(message):
     return
 
   if str(message.author.id) in users["reports"]:
-    if "잘자" in message.content:
+    if "잘자" == message.content[:2]:
       await message.channel.send(f"{message.author.mention}님! 잘자요~")
-    elif "안녕" in message.content:
-      await message.channel.send("안녕")
 
 
 async def MuseYa(message, text):
